@@ -1,0 +1,147 @@
+using Photon.Pun;
+using Photon.Pun.Demo.PunBasics;
+using System.Threading.Tasks;
+using UnityEngine;
+
+
+public class OnTriggerSceneSwitch : MonoBehaviour
+{
+    [Tooltip("Subworld data is loading admin panel then only required")]
+    public int DomeId;
+    public string WorldIdTestnet;
+    public string WorldIdMainnet;
+    public GameObject textMeshPro;
+    [Header("To Manage subworld loading from admin")]
+    public bool LoadDirectly;
+    public bool LoadingFromSummitWorld;
+    public bool HaveSubworlds;
+    [Header("To Manage Penpenz Mini Game")]
+    public bool isPenpenzMiniGame;
+
+    [HideInInspector]
+    public string WorldId;
+    private bool alreadyTriggered;
+
+    [Header("Dome Type and Category")]
+    public DomeType _domeType;
+    public DomeCategory _domeCategory;
+
+    private void OnEnable()
+    {
+        if (APIBasepointManager.instance.IsXanaLive)
+            WorldId = WorldIdMainnet;
+        else
+            WorldId = WorldIdTestnet;
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        //if (!PhotonNetwork.InRoom) return;
+        if (MutiplayerController.instance.connectionState != ServerConnectionStates.ConnectedToServer || AvatarSpawnerOnDisconnect.Instance.IsRjoining) return;
+        if (other.GetComponent<PlayerPhotonInfo>() && other.CompareTag("PhotonLocalPlayer") && 
+            other.GetComponent<PlayerPhotonInfo>().IsMine && !alreadyTriggered)
+        {
+            StartCoroutine(WaitForShift());
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.GetComponent<PlayerPhotonInfo>() && other.GetComponent<PlayerPhotonInfo>().IsMine)
+        {
+            alreadyTriggered = false;
+        }
+    }
+
+    System.Collections.IEnumerator WaitForShift()
+    {
+        //yield return new WaitUntil(() => !MutiplayerController.instance.isShifting);
+
+        alreadyTriggered = true;
+
+        if (DomeId == -1 || LoadDirectly)
+        {
+            TriggerSceneLoading(WorldId);
+        }
+        else
+        {
+            ConstantsHolder.IsSubWorld = false; 
+            TriggerSceneLoading();
+        }
+
+        //DisableCollider();
+        yield return null;
+    }
+
+    void TriggerSceneLoading()
+    {
+        BuilderEventManager.spaceXDeactivated?.Invoke();
+        //GameplayEntityLoader.instance.AssignRaffleTickets(DomeId);
+        BuilderEventManager.LoadNewScene?.Invoke(DomeId, transform.GetChild(0).transform.position,false);
+    }
+
+    void TriggerSceneLoading(string WorldId)
+    {
+        ConstantsHolder.xanaConstants.isBuilderGame = isPenpenzMiniGame;
+        if (isPenpenzMiniGame)
+            ConstantsHolder.isPenguin = true;
+        CheckSceneParemeter();
+        BuilderEventManager.LoadSceneByName?.Invoke(WorldId, transform.GetChild(0).transform.position);
+    }
+
+    //async void DisableCollider()
+    //{
+    //    await Task.Delay(2000);
+    //    alreadyTriggered = false;
+    //}
+
+
+    void CheckSceneParemeter()
+    {
+        //if (LoadingFromSummitWorld)
+        //{
+        //    ConstantsHolder.isFromXANASummit = true;
+        //    ReferencesForGamePlay.instance.ChangeExitBtnImage(false);
+        //}
+        if(HaveSubworlds)
+        {
+            ConstantsHolder.HaveSubWorlds = true;
+            ConstantsHolder.domeId = DomeId;
+        }
+        ConstantsHolder.DomeType = _domeType.ToString();
+        ConstantsHolder.DomeCategory = _domeCategory.ToString();
+    }
+
+    public enum DomeType
+    {
+        None,
+        Game,
+        Exhibition
+    }
+
+    public enum DomeCategory
+    {
+        None,
+        Business,
+        Sports,
+        Music,
+        Art,
+        Education,
+        Healing,
+        Action,
+        Race,
+        Adventure,
+        Story,
+        NFT,
+        DAO,
+        Fun,
+        Horror,
+        Quiz,
+        Idol,
+        Vtuber,
+        Space,
+        AI,
+        Local,
+        Blockchain,
+        Finance
+    }
+}

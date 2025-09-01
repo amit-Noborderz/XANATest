@@ -1,0 +1,64 @@
+using UnityEngine.UI;
+using UnityEngine;
+
+public class SummitCarUIHandler : MonoBehaviour
+{
+    //Public variables
+    public static SummitCarUIHandler SummitCarUIHandlerInstance;
+    public GameObject CarCanvas;
+    public Button ExitButtonLandscape;
+    public Button ExitButtonPotrait;
+
+    public Button ExitButton
+    {
+        get
+        {
+            if (!ScreenOrientationManager._instance.isPotrait)
+                return ExitButtonLandscape;
+            else
+                return ExitButtonPotrait;
+        }
+    }
+
+    [SerializeField]
+    private GameObject[] objectsToEnableDisable;
+    public GameObject ActionCircular;
+    [SerializeField]
+    private RectTransform inviteBtnPortait;
+    [SerializeField]
+    private RectTransform peopleRect;
+    [SerializeField]
+    private GameObject[] ObjectsToEnableForWheel;
+    private void Awake()
+    {
+        if (SummitCarUIHandlerInstance == null)
+            SummitCarUIHandlerInstance = this;
+        else DestroyImmediate(this);
+    }
+
+    public void UpdateUIelement(bool enable, bool InSideWheel)
+    {
+        objectsToEnableDisable.SetActive(enable);
+        if (InSideWheel)
+            ObjectsToEnableForWheel.SetActive(true);
+        if (ActionCircular.activeInHierarchy)
+        {
+            ActionCircular.SetActive(false);
+        }
+
+        if (!enable)
+        {
+            inviteBtnPortait.anchoredPosition = new Vector2(50f, -63.30005f);
+            peopleRect.anchoredPosition = new Vector2(-78.3f, -3.399902f);
+           
+        }
+        else
+        {
+            inviteBtnPortait.anchoredPosition = new Vector2(-31.5f, -63.30005f);
+            peopleRect.anchoredPosition = new Vector2(2.699951f, -3.399902f);
+        }
+        GamePlayUIHandler.inst.fPSOffButton.interactable = enable;
+        GamePlayUIHandler.inst.fPSOnButton.interactable = enable;
+    }
+
+}
